@@ -1,10 +1,14 @@
 #![no_std]
+#![cfg_attr(feature = "async", feature(async_fn_in_trait))]
 
 use embedded_hal::serial::{Read, Write};
 use nb::block;
 use scroll::{Pread, Pwrite, BE};
 
 mod read_fsm;
+
+#[cfg(feature = "async")]
+pub mod async_interface;
 
 const CMD_FRAME_SIZE: usize = 7;
 const OUTPUT_FRAME_SIZE: usize = 32;
@@ -15,7 +19,7 @@ type Response = [u8; RESPONSE_FRAME_SIZE];
 
 pub const MN1: u8 = 0x42;
 pub const MN2: u8 = 0x4D;
-const PASSIVE_MODE_RESPONSE: Response = [MN1, MN1, 0x00, 0x04, 0xE1, 0x00, 0x01, 0x74];
+const PASSIVE_MODE_RESPONSE: Response = [MN1, MN2, 0x00, 0x04, 0xE1, 0x00, 0x01, 0x74];
 const ACTIVE_MODE_RESPONSE: Response = [MN1, MN2, 0x00, 0x04, 0xE1, 0x01, 0x01, 0x75];
 const SLEEP_RESPONSE: Response = [MN1, MN2, 0x00, 0x04, 0xE4, 0x00, 0x01, 0x77];
 
@@ -70,7 +74,7 @@ where
         OutputFrame::from_buffer(&self.read_from_device([0_u8; OUTPUT_FRAME_SIZE])?)
     }
 
-    /// Sleep mode. May fail because of incorrect reposnse because of race condition between response and air quality status
+    /// Sleep mode. May fail because of incorrect response because of race condition between response and air quality status
     pub fn sleep(&mut self) -> Result<(), Error> {
         self.send_cmd(&create_command(0xe4, 0))?;
         self.receive_response(SLEEP_RESPONSE)
