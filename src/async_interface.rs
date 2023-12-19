@@ -13,6 +13,7 @@ impl embedded_io_async::Error for crate::Error {
     }
 }
 
+/// pms-7003 Sensor with async interface
 pub struct Pms7003SensorAsync<Serial> {
     serial: Serial,
 }
@@ -45,6 +46,7 @@ where
         self.receive_response(SLEEP_RESPONSE).await
     }
 
+    /// Wake the sensor from sleep
     pub async fn wake(&mut self) -> Result<(), Error> {
         self.send_cmd(&crate::create_command(0xe4, 1)).await
     }
