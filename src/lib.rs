@@ -1,6 +1,6 @@
 #![no_std]
-#![cfg_attr(feature = "async", feature(async_fn_in_trait))]
 
+use core::fmt;
 use embedded_hal::serial::{Read, Write};
 use nb::block;
 use scroll::{Pread, Pwrite, BE};
@@ -31,6 +31,14 @@ pub enum Error {
     IncorrectResponse,
     NoResponse,
 }
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl core::error::Error for Error {}
 
 /// Sensor interface
 pub struct Pms7003Sensor<Serial>
