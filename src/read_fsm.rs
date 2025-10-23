@@ -91,7 +91,7 @@ impl<'a> ReadStateMachine<'a> {
 mod tests {
     use super::*;
 
-    fn create_test_fsm(buffer: &mut [u8], retries: usize) -> ReadStateMachine {
+    fn create_test_fsm(buffer: &mut [u8], retries: usize) -> ReadStateMachine<'_> {
         ReadStateMachine {
             buffer,
             index: 0,
