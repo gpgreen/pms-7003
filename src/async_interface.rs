@@ -2,8 +2,8 @@
 
 use crate::read_fsm::{self, ReadStatus};
 use crate::{
-    Error, OutputFrame, Response, ACTIVE_MODE_RESPONSE, OUTPUT_FRAME_SIZE, PASSIVE_MODE_RESPONSE,
-    RESPONSE_FRAME_SIZE, SLEEP_RESPONSE,
+    ACTIVE_MODE_RESPONSE, Error, OUTPUT_FRAME_SIZE, OutputFrame, PASSIVE_MODE_RESPONSE,
+    RESPONSE_FRAME_SIZE, Response, SLEEP_RESPONSE,
 };
 use embedded_io_async::{Read, Write};
 
@@ -109,8 +109,8 @@ mod test {
     use super::*;
     use core::fmt::Debug;
     use embedded_hal::serial::{Read, Write};
-    use embedded_hal_mock::serial::{Mock as SerialMock, Transaction as SerialTransaction};
     use embedded_hal_mock::MockError;
+    use embedded_hal_mock::serial::{Mock as SerialMock, Transaction as SerialTransaction};
     use heapless::Vec;
     //extern crate std;
 
@@ -159,28 +159,6 @@ mod test {
             }
             Ok(buf.len())
         }
-
-        // Provided method
-        async fn read_exact(
-            &mut self,
-            buf: &mut [u8],
-        ) -> Result<(), embedded_io_async::ReadExactError<Self::Error>> {
-            //std::println!("read_exact {} bytes", buf.len());
-            for i in 0..buf.len() {
-                buf[i] = match self.0.read() {
-                    Ok(b) => {
-                        //std::println!("byte: {}", b);
-                        b
-                    }
-                    Err(e) => {
-                        return Err(embedded_io_async::ReadExactError::Other(AsyncError::Mock(
-                            e,
-                        )))
-                    }
-                };
-            }
-            Ok(())
-        }
     }
 
     impl embedded_io_async::Write for AsyncSerialMock {
@@ -189,12 +167,6 @@ mod test {
                 self.0.write(buf[i])?;
             }
             Ok(buf.len())
-        }
-
-        // Provided method
-        async fn flush(&mut self) -> Result<(), Self::Error> {
-            self.0.flush()?;
-            Ok(())
         }
     }
 
