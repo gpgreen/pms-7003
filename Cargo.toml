@@ -8,18 +8,18 @@ repository = "https://github.com/g-bartoszek/pms-7003"
 description = "Rust interface for PMS 7003 air quality sensor"
 
 [dependencies]
-embedded-hal = "0.2.7"
-scroll = { version = "0.11.0", default-features = false }
+scroll = { version = "0.13.0", default-features = false }
 nb = "1"
-#embedded-io = { version = "0.6.1", optional = true }
+embedded-hal-nb = "1.0"
 embedded-io-async = { version = "0.6.1", optional = true }
 defmt = { version = "0.3", optional = true }
 
 [features]
-async = ["dep:embedded-io-async", "dep:defmt", "embedded-io-async/defmt-03"]
+async = ["dep:embedded-io-async", "defmt"]
+defmt = ["dep:defmt", "embedded-io-async/defmt-03"]
 
 [dev-dependencies]
-linux-embedded-hal = "0.3.0"
-embedded-hal-mock = "0.9.0"
+linux-embedded-hal = "0.4.0"
+embedded-hal-mock = "0.11.1"
 tokio-test = "*"
 heapless = "0.8.0"

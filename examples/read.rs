@@ -10,7 +10,7 @@ fn main() {
 
     println!("Connecting to: {}", path);
 
-    let device = linux_embedded_hal::Serial::open(std::path::Path::new(&path)).unwrap();
+    let device = linux_embedded_hal::Serial::open(path, 9600).unwrap();
     let mut sensor = Pms7003Sensor::new(device);
 
     loop {

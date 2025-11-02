@@ -3,17 +3,23 @@ use pms_7003::Pms7003Sensor;
 struct RxMock {}
 struct TxMock {}
 
-impl embedded_hal::serial::Read<u8> for RxMock {
-    type Error = ();
+impl embedded_hal_nb::serial::ErrorType for RxMock {
+    type Error = pms_7003::Error;
+}
 
+impl embedded_hal_nb::serial::Read<u8> for RxMock {
     fn read(&mut self) -> nb::Result<u8, Self::Error> {
-        Err(nb::Error::Other::<()>(()))
+        Err(nb::Error::Other::<pms_7003::Error>(
+            pms_7003::Error::NoResponse,
+        ))
     }
 }
 
-impl embedded_hal::serial::Write<u8> for TxMock {
-    type Error = ();
+impl embedded_hal_nb::serial::ErrorType for TxMock {
+    type Error = pms_7003::Error;
+}
 
+impl embedded_hal_nb::serial::Write<u8> for TxMock {
     fn write(&mut self, _: u8) -> nb::Result<(), Self::Error> {
         Ok(())
     }

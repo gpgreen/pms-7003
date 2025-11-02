@@ -1,9 +1,9 @@
 #![no_std]
 
 use core::fmt;
-use embedded_hal::serial::{Read, Write};
+use embedded_hal_nb::serial;
 use nb::block;
-use scroll::{Pread, Pwrite, BE};
+use scroll::{BE, Pread, Pwrite};
 
 mod read_fsm;
 
@@ -38,22 +38,33 @@ impl fmt::Display for Error {
     }
 }
 
-impl core::error::Error for Error {}
+impl serial::ErrorType for Error {
+    type Error = Error;
+}
+
+impl serial::Error for Error {
+    // Required method
+    fn kind(&self) -> serial::ErrorKind {
+        match self {
+            _ => serial::ErrorKind::Other,
+        }
+    }
+}
 
 /// Sensor interface
 pub struct Pms7003Sensor<Serial>
 where
-    Serial: Read<u8> + Write<u8>,
+    Serial: serial::Read<u8> + serial::Write<u8>,
 {
     serial: Serial,
 }
 
 impl<Serial> Pms7003Sensor<Serial>
 where
-    Serial: Read<u8> + Write<u8>,
+    Serial: serial::Read<u8> + serial::Write<u8>,
 {
     /// Creates a new sensor instance
-    /// * `serial` - single object implementing embedded hal serial traits
+    /// * `serial` - single object implementing embedded-io traits
     pub fn new(mut serial: Serial) -> Self {
         loop {
             if serial.read().is_err() {
@@ -207,8 +218,10 @@ impl OutputFrame {
 
 impl<TX, RX> Pms7003Sensor<Wrapper<TX, RX>>
 where
-    TX: Write<u8>,
-    RX: Read<u8>,
+    TX: serial::Write<u8>,
+    RX: serial::Read<u8>,
+    TX: serial::ErrorType<Error = Error>,
+    RX: serial::ErrorType<Error = Error>,
 {
     /// Creates a new sensor instance
     /// * `tx` - embedded hal serial Write
@@ -218,36 +231,48 @@ where
     }
 }
 
+impl<TX, RX> serial::ErrorType for Wrapper<TX, RX>
+where
+    TX: serial::Write<u8>,
+    RX: serial::Read<u8>,
+    TX: serial::ErrorType<Error = Error>,
+    RX: serial::ErrorType<Error = Error>,
+{
+    type Error = Error;
+}
+
 /// Combines two serial traits objects into one
 pub struct Wrapper<TX, RX>(TX, RX)
 where
-    TX: Write<u8>,
-    RX: Read<u8>;
+    TX: serial::Write<u8>,
+    RX: serial::Read<u8>,
+    TX: serial::ErrorType<Error = Error>,
+    RX: serial::ErrorType<Error = Error>;
 
-impl<TX, RX> Read<u8> for Wrapper<TX, RX>
+impl<TX, RX> serial::Read<u8> for Wrapper<TX, RX>
 where
-    TX: Write<u8>,
-    RX: Read<u8>,
+    TX: serial::Write<u8>,
+    RX: serial::Read<u8>,
+    TX: serial::ErrorType<Error = Error>,
+    RX: serial::ErrorType<Error = Error>,
 {
-    type Error = RX::Error;
-
-    fn read(&mut self) -> nb::Result<u8, Self::Error> {
+    fn read(&mut self) -> nb::Result<u8, Error> {
         self.1.read()
     }
 }
 
-impl<TX, RX> Write<u8> for Wrapper<TX, RX>
+impl<TX, RX> serial::Write<u8> for Wrapper<TX, RX>
 where
-    TX: Write<u8>,
-    RX: Read<u8>,
+    TX: serial::Write<u8>,
+    RX: serial::Read<u8>,
+    TX: serial::ErrorType<Error = Error>,
+    RX: serial::ErrorType<Error = Error>,
 {
-    type Error = TX::Error;
-
-    fn write(&mut self, word: u8) -> nb::Result<(), Self::Error> {
+    fn write(&mut self, word: u8) -> nb::Result<(), Error> {
         self.0.write(word)
     }
 
-    fn flush(&mut self) -> nb::Result<(), Self::Error> {
+    fn flush(&mut self) -> nb::Result<(), Error> {
         self.0.flush()
     }
 }
